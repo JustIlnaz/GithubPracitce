@@ -17,7 +17,10 @@ class CartScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Моя корзина')),
       body: cartProvider.items.isEmpty
-          ? const EmptyState(icon: Icons.shopping_cart_outlined, message: 'Ваша корзина пуста')
+          ? const EmptyState(
+              icon: Icons.shopping_cart_outlined,
+              message: 'Ваша корзина пуста',
+            )
           : Column(
               children: [
                 Expanded(
@@ -34,46 +37,119 @@ class CartScreen extends StatelessWidget {
                             children: [
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(8),
-                                child: item.product.imageUrl != null && item.product.imageUrl!.isNotEmpty
+                                child:
+                                    item.product.imageUrl != null &&
+                                        item.product.imageUrl!.isNotEmpty
                                     ? CachedNetworkImage(
-                                        imageUrl: ApiClient.getFullImageUrl(item.product.imageUrl!),
+                                        imageUrl: ApiClient.getFullImageUrl(
+                                          item.product.imageUrl!,
+                                        ),
                                         width: 80,
                                         height: 80,
                                         fit: BoxFit.cover,
-                                        placeholder: (context, url) => Container(color: Theme.of(context).colorScheme.surfaceContainerHighest),
-                                        errorWidget: (context, url, error) => const Icon(Icons.image_not_supported),
+                                        placeholder: (context, url) =>
+                                            Container(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .surfaceContainerHighest,
+                                            ),
+                                        errorWidget: (context, url, error) =>
+                                            const Icon(
+                                              Icons.image_not_supported,
+                                            ),
                                       )
-                                    : Container(width: 80, height: 80, color: Theme.of(context).colorScheme.surfaceContainerHighest, child: const Icon(Icons.image)),
+                                    : Container(
+                                        width: 80,
+                                        height: 80,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.surfaceContainerHighest,
+                                        child: const Icon(Icons.image),
+                                      ),
                               ),
                               const SizedBox(width: AppSpacing.md),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(item.product.name, style: Theme.of(context).textTheme.titleMedium, maxLines: 1, overflow: TextOverflow.ellipsis),
+                                    Text(
+                                      item.product.name,
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.titleMedium,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      '${(item.product.discountPrice ?? item.product.price).toStringAsFixed(2)} ₽',
-                                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.primary),
+                                      '${item.unitPrice.toStringAsFixed(2)} ₽ за шт.',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.copyWith(
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.primary,
+                                          ),
                                     ),
-                                    const SizedBox(height: 8),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Стоимость: ${item.totalPrice.toStringAsFixed(2)} ₽',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                    ),
+                                    const SizedBox(height: 4),
                                     Row(
                                       children: [
-                                        InkWell(
-                                          onTap: () => cartProvider.updateQuantity(item.product.id, item.quantity - 1),
-                                          child: const Icon(Icons.remove_circle_outline, size: 24),
+                                        IconButton(
+                                          tooltip: 'Уменьшить количество',
+                                          onPressed: item.quantity > 1
+                                              ? () =>
+                                                    cartProvider.updateQuantity(
+                                                      item.product.id,
+                                                      item.quantity - 1,
+                                                    )
+                                              : null,
+                                          icon: const Icon(
+                                            Icons.remove_circle_outline,
+                                          ),
                                         ),
-                                        const SizedBox(width: 12),
-                                        Text('${item.quantity}', style: Theme.of(context).textTheme.bodyLarge),
-                                        const SizedBox(width: 12),
-                                        InkWell(
-                                          onTap: () => cartProvider.updateQuantity(item.product.id, item.quantity + 1),
-                                          child: const Icon(Icons.add_circle_outline, size: 24),
+                                        Text(
+                                          '${item.quantity}',
+                                          style: Theme.of(
+                                            context,
+                                          ).textTheme.bodyLarge,
+                                        ),
+                                        IconButton(
+                                          tooltip: 'Увеличить количество',
+                                          onPressed:
+                                              cartProvider.canIncreaseQuantity(
+                                                item.product.id,
+                                              )
+                                              ? () =>
+                                                    cartProvider.updateQuantity(
+                                                      item.product.id,
+                                                      item.quantity + 1,
+                                                    )
+                                              : null,
+                                          icon: const Icon(
+                                            Icons.add_circle_outline,
+                                          ),
                                         ),
                                         const Spacer(),
                                         IconButton(
-                                          icon: Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.error),
-                                          onPressed: () => cartProvider.removeFromCart(item.product.id),
+                                          icon: Icon(
+                                            Icons.delete_outline,
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.error,
+                                          ),
+                                          onPressed: () => cartProvider
+                                              .removeFromCart(item.product.id),
                                         ),
                                       ],
                                     ),
@@ -91,7 +167,13 @@ class CartScreen extends StatelessWidget {
                   padding: const EdgeInsets.all(AppSpacing.md),
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.surfaceContainer,
-                    boxShadow: [BoxShadow(color: Colors.black26, offset: Offset(0, -2), blurRadius: 4)],
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black26,
+                        offset: Offset(0, -2),
+                        blurRadius: 4,
+                      ),
+                    ],
                   ),
                   child: SafeArea(
                     child: Column(
@@ -101,7 +183,9 @@ class CartScreen extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             const Text('Стоимость товаров'),
-                            Text('${cartProvider.totalAmount.toStringAsFixed(2)} ₽'),
+                            Text(
+                              '${cartProvider.totalAmount.toStringAsFixed(2)} ₽',
+                            ),
                           ],
                         ),
                         const SizedBox(height: AppSpacing.sm),
@@ -109,21 +193,37 @@ class CartScreen extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             const Text('Доставка'),
-                            Text('${cartProvider.deliveryFee.toStringAsFixed(2)} ₽'),
+                            Text(
+                              '${cartProvider.deliveryFee.toStringAsFixed(2)} ₽',
+                            ),
                           ],
                         ),
                         const Divider(height: AppSpacing.lg),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text('Итого', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-                            Text('${(cartProvider.totalAmount + cartProvider.deliveryFee).toStringAsFixed(2)} ₽', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)),
+                            Text(
+                              'Итого',
+                              style: Theme.of(context).textTheme.titleLarge
+                                  ?.copyWith(fontWeight: FontWeight.bold),
+                            ),
+                            Text(
+                              '${(cartProvider.totalAmount + cartProvider.deliveryFee).toStringAsFixed(2)} ₽',
+                              style: Theme.of(context).textTheme.titleLarge
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                            ),
                           ],
                         ),
                         const SizedBox(height: AppSpacing.lg),
                         PrimaryButton(
                           text: 'Перейти к оформлению',
-                          onPressed: () => Navigator.pushNamed(context, '/checkout'),
+                          onPressed: () =>
+                              Navigator.pushNamed(context, '/checkout'),
                         ),
                       ],
                     ),
