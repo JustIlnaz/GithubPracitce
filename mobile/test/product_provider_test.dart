@@ -125,26 +125,29 @@ void main() {
       );
     });
 
-    test('does not repeat an identical request after an empty result', () async {
-      final service = FakeProductService();
-      final provider = ProductProvider(productService: service);
+    test(
+      'does not repeat an identical request after an empty result',
+      () async {
+        final service = FakeProductService();
+        final provider = ProductProvider(productService: service);
 
-      await provider.applyFilters(
-        categoryId: 'empty-category',
-        minPrice: null,
-        maxPrice: null,
-        sortOption: ProductSortOption.defaultOrder,
-      );
-      await provider.applyFilters(
-        categoryId: 'empty-category',
-        minPrice: null,
-        maxPrice: null,
-        sortOption: ProductSortOption.defaultOrder,
-      );
+        await provider.applyFilters(
+          categoryId: 'empty-category',
+          minPrice: null,
+          maxPrice: null,
+          sortOption: ProductSortOption.defaultOrder,
+        );
+        await provider.applyFilters(
+          categoryId: 'empty-category',
+          minPrice: null,
+          maxPrice: null,
+          sortOption: ProductSortOption.defaultOrder,
+        );
 
-      expect(provider.products, isEmpty);
-      expect(service.requests, hasLength(1));
-    });
+        expect(provider.products, isEmpty);
+        expect(service.requests, hasLength(1));
+      },
+    );
 
     test('exposes a loading error and clears loading state', () async {
       final service = FakeProductService()..error = StateError('load failed');
