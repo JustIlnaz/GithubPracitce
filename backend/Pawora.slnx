@@ -5,4 +5,7 @@
     <Project Path="src/Pawora.Core/Pawora.Core.csproj" />
     <Project Path="src/Pawora.DataAccess/Pawora.DataAccess.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Pawora.Application.Tests/Pawora.Application.Tests.csproj" />
+  </Folder>
 </Solution>
