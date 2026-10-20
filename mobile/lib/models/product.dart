@@ -13,6 +13,8 @@ class Product {
   final double rating;
   final int reviewCount;
 
+  double get effectivePrice => discountPrice ?? price;
+
   Product({
     required this.id,
     required this.name,

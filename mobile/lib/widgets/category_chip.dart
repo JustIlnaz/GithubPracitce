@@ -38,7 +38,7 @@ class CategoryChip extends StatelessWidget {
               const SizedBox(width: 8),
             ],
             Text(
-              _getRussianCategoryName(category.name),
+              category.displayName,
               style: Theme.of(context).textTheme.labelLarge?.copyWith(
                 color: isSelected ? Theme.of(context).colorScheme.onPrimaryContainer : Theme.of(context).colorScheme.onSurface,
               ),
@@ -47,19 +47,6 @@ class CategoryChip extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  String _getRussianCategoryName(String name) {
-    switch (name.toLowerCase()) {
-      case 'all': return 'Все';
-      case 'food': return 'Корма';
-      case 'toys': return 'Игрушки';
-      case 'healthcare': return 'Здоровье';
-      case 'accessories': return 'Аксессуары';
-      case 'grooming': return 'Груминг';
-      case 'clothing': return 'Одежда';
-      default: return name;
-    }
   }
 
   IconData _getIcon(String name) {

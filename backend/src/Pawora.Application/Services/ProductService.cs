@@ -5,6 +5,7 @@ using Pawora.Application.DTOs;
 using Pawora.Application.DTOs.Products;
 using Pawora.Application.Interfaces;
 using AutoMapper;
+using Pawora.Core.Enums;
 
 namespace Pawora.Application.Services;
 
@@ -21,10 +22,19 @@ public class ProductService : IProductService
 
     public async Task<ApiResponse<List<ProductDto>>> GetProductsAsync(ProductFilterDto dto)
     {
-        var query = _productRepo.Query().Include(p => p.Shop).Include(p => p.Category).AsQueryable();
+        var query = _productRepo.Query()
+            .AsNoTracking()
+            .Include(p => p.Shop)
+            .Include(p => p.Category)
+            .AsQueryable();
 
-        if (!string.IsNullOrEmpty(dto.Search))
-            query = query.Where(p => p.Name.Contains(dto.Search) || p.Description != null && p.Description.Contains(dto.Search));
+        if (!string.IsNullOrWhiteSpace(dto.Search))
+        {
+            var search = dto.Search.Trim();
+            query = query.Where(p =>
+                p.Name.Contains(search) ||
+                p.Description != null && p.Description.Contains(search));
+        }
             
         if (dto.CategoryId.HasValue)
             query = query.Where(p => p.CategoryId == dto.CategoryId.Value);
@@ -32,12 +42,34 @@ public class ProductService : IProductService
         if (dto.ShopId.HasValue)
             query = query.Where(p => p.ShopId == dto.ShopId.Value);
 
+        if (dto.MinPrice.HasValue)
+            query = query.Where(p => (p.DiscountPrice ?? p.Price) >= dto.MinPrice.Value);
+
+        if (dto.MaxPrice.HasValue)
+            query = query.Where(p => (p.DiscountPrice ?? p.Price) <= dto.MaxPrice.Value);
+
         query = dto.SortBy?.ToLower() switch
         {
-            "price_asc" => query.OrderBy(p => p.Price),
-            "price_desc" => query.OrderByDescending(p => p.Price),
-            "rating" => query.OrderByDescending(p => p.Rating),
-            _ => query.OrderByDescending(p => p.CreatedAt)
+            ProductSortOptions.PriceAscending => query
+                .OrderBy(p => p.DiscountPrice ?? p.Price)
+                .ThenBy(p => p.Id),
+            ProductSortOptions.PriceDescending => query
+                .OrderByDescending(p => p.DiscountPrice ?? p.Price)
+                .ThenBy(p => p.Id),
+            ProductSortOptions.RatingDescending => query
+                .OrderByDescending(p => p.Rating)
+                .ThenByDescending(p => p.CreatedAt)
+                .ThenBy(p => p.Id),
+            ProductSortOptions.PopularityDescending => query
+                .OrderByDescending(p => p.OrderItems
+                    .Where(item => item.Order.Status != OrderStatus.Cancelled)
+                    .Sum(item => (int?)item.Quantity) ?? 0)
+                .ThenByDescending(p => p.Rating)
+                .ThenByDescending(p => p.CreatedAt)
+                .ThenBy(p => p.Id),
+            _ => query
+                .OrderByDescending(p => p.CreatedAt)
+                .ThenBy(p => p.Id)
         };
 
         var products = await query.Skip(dto.Skip).Take(dto.Take).ToListAsync();

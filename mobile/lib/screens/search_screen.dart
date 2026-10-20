@@ -6,6 +6,7 @@ import '../widgets/product_card.dart';
 import '../widgets/loading_state.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/error_state.dart';
+import '../widgets/catalog_filters.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -16,13 +17,14 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   final _searchController = TextEditingController();
-  String? _selectedCategoryId;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<ProductProvider>(context, listen: false).fetchCategories();
+      final provider = Provider.of<ProductProvider>(context, listen: false);
+      _searchController.text = provider.searchQuery;
+      provider.fetchCategories();
     });
   }
 
@@ -33,11 +35,10 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   void _onSearch() {
-    final query = _searchController.text;
-    Provider.of<ProductProvider>(context, listen: false).fetchProducts(
-      search: query.isNotEmpty ? query : null,
-      categoryId: _selectedCategoryId,
-    );
+    Provider.of<ProductProvider>(
+      context,
+      listen: false,
+    ).updateSearch(_searchController.text);
   }
 
   @override
@@ -66,6 +67,13 @@ class _SearchScreenState extends State<SearchScreen> {
           ),
           onSubmitted: (_) => _onSearch(),
         ),
+        actions: [
+          CatalogFilterButton(
+            activeFilterCount: provider.activeFilterCount,
+            compact: true,
+            onPressed: () => CatalogFilterSheet.show(context),
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -74,22 +82,27 @@ class _SearchScreenState extends State<SearchScreen> {
             padding: const EdgeInsets.all(AppSpacing.md),
             child: Row(
               children: [
-                _buildFilterChip('Все', null, _selectedCategoryId == null),
+                _buildFilterChip(
+                  'Все',
+                  null,
+                  provider.selectedCategoryId == null,
+                ),
                 if (provider.categories.isNotEmpty)
                   ...provider.categories.map((cat) {
-                    // Translate common categories to Russian for UI
-                    String label = cat.name;
-                    switch (cat.name.toLowerCase()) {
-                      case 'food': label = 'Корма'; break;
-                      case 'toys': label = 'Игрушки'; break;
-                      case 'healthcare': label = 'Здоровье'; break;
-                      case 'accessories': label = 'Аксессуары'; break;
-                      case 'grooming': label = 'Груминг'; break;
-                      case 'clothing': label = 'Одежда'; break;
-                    }
-                    return _buildFilterChip(label, cat.id, _selectedCategoryId == cat.id);
+                    return _buildFilterChip(
+                      cat.displayName,
+                      cat.id,
+                      provider.selectedCategoryId == cat.id,
+                    );
                   }),
               ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: ActiveCatalogFilters(provider: provider),
             ),
           ),
           Expanded(
@@ -107,10 +120,10 @@ class _SearchScreenState extends State<SearchScreen> {
         label: Text(label),
         selected: isSelected,
         onSelected: (_) {
-          setState(() {
-            _selectedCategoryId = categoryId;
-          });
-          _onSearch();
+          Provider.of<ProductProvider>(
+            context,
+            listen: false,
+          ).selectCategory(categoryId);
         },
         backgroundColor: Theme.of(context).colorScheme.surfaceContainerHigh,
         selectedColor: Theme.of(context).colorScheme.primaryContainer,
@@ -125,7 +138,12 @@ class _SearchScreenState extends State<SearchScreen> {
     } else if (provider.error != null) {
       return ErrorState(message: provider.error!, onRetry: () => _onSearch());
     } else if (provider.customerProducts.isEmpty) {
-      return const EmptyState(icon: Icons.search_off, message: 'Товары не найдены');
+      return EmptyState(
+        icon: Icons.search_off,
+        message: 'По выбранным условиям товары не найдены',
+        actionLabel: provider.hasActiveFilters ? 'Сбросить фильтры' : null,
+        onAction: provider.hasActiveFilters ? provider.resetFilters : null,
+      );
     }
 
     return GridView.builder(

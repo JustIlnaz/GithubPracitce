@@ -6,5 +6,8 @@ void main() {
   testWidgets('App smoke test', (WidgetTester tester) async {
     await tester.pumpWidget(const PaworaApp());
     expect(find.byType(MaterialApp), findsOneWidget);
+
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pumpAndSettle();
   });
 }

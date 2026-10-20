@@ -4,8 +4,16 @@ import '../theme/app_theme.dart';
 class EmptyState extends StatelessWidget {
   final IconData icon;
   final String message;
+  final String? actionLabel;
+  final VoidCallback? onAction;
 
-  const EmptyState({super.key, required this.icon, required this.message});
+  const EmptyState({
+    super.key,
+    required this.icon,
+    required this.message,
+    this.actionLabel,
+    this.onAction,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -22,6 +30,10 @@ class EmptyState extends StatelessWidget {
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
             ),
+            if (actionLabel != null && onAction != null) ...[
+              const SizedBox(height: AppSpacing.md),
+              OutlinedButton(onPressed: onAction, child: Text(actionLabel!)),
+            ],
           ],
         ),
       ),

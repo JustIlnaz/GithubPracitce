@@ -8,6 +8,8 @@ import '../widgets/category_chip.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/loading_state.dart';
 import '../widgets/error_state.dart';
+import '../widgets/empty_state.dart';
+import '../widgets/catalog_filters.dart';
 import '../models/category.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -18,8 +20,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  String? _selectedCategoryId;
-
   @override
   void initState() {
     super.initState();
@@ -57,7 +57,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     Text('Привет, ${user?.fullName ?? 'Гость'}!', style: Theme.of(context).textTheme.headlineMedium),
                     const SizedBox(height: AppSpacing.md),
                     CustomTextField(
-                      label: 'Поиск товаров...',
+                      label: productProvider.searchQuery.isEmpty
+                          ? 'Поиск товаров...'
+                          : 'Поиск: ${productProvider.searchQuery}',
                       prefixIcon: Icons.search,
                       readOnly: true,
                       onTap: () => Navigator.pushNamed(context, '/search'),
@@ -92,27 +94,42 @@ class _HomeScreenState extends State<HomeScreen> {
                             if (index == 0) {
                               return CategoryChip(
                                 category: _createAllCategory(),
-                                isSelected: _selectedCategoryId == null,
-                                onTap: () {
-                                  setState(() => _selectedCategoryId = null);
-                                  productProvider.fetchProducts();
-                                },
+                                isSelected:
+                                    productProvider.selectedCategoryId == null,
+                                onTap: () =>
+                                    productProvider.selectCategory(null),
                               );
                             }
                             final cat = productProvider.categories[index - 1];
                             return CategoryChip(
                               category: cat,
-                              isSelected: _selectedCategoryId == cat.id,
-                              onTap: () {
-                                  setState(() => _selectedCategoryId = cat.id);
-                                  productProvider.fetchProducts(categoryId: cat.id);
-                              },
+                              isSelected:
+                                  productProvider.selectedCategoryId == cat.id,
+                              onTap: () =>
+                                  productProvider.selectCategory(cat.id),
                             );
                           },
                         ),
                       ),
                     const SizedBox(height: AppSpacing.lg),
-                    Text('Популярные товары', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Каталог товаров',
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        CatalogFilterButton(
+                          activeFilterCount:
+                              productProvider.activeFilterCount,
+                          onPressed: () =>
+                              CatalogFilterSheet.show(context),
+                        ),
+                      ],
+                    ),
+                    ActiveCatalogFilters(provider: productProvider),
                     const SizedBox(height: AppSpacing.md),
                   ],
                 ),
@@ -121,7 +138,25 @@ class _HomeScreenState extends State<HomeScreen> {
             if (productProvider.isLoading)
               const SliverToBoxAdapter(child: LoadingState())
             else if (productProvider.error != null)
-              SliverToBoxAdapter(child: ErrorState(message: productProvider.error!, onRetry: () => productProvider.fetchProducts(categoryId: _selectedCategoryId)))
+              SliverToBoxAdapter(
+                child: ErrorState(
+                  message: productProvider.error!,
+                  onRetry: productProvider.fetchProducts,
+                ),
+              )
+            else if (productProvider.customerProducts.isEmpty)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: EmptyState(
+                  icon: Icons.inventory_2_outlined,
+                  message: 'По выбранным условиям товары не найдены',
+                  actionLabel:
+                      productProvider.hasActiveFilters ? 'Сбросить фильтры' : null,
+                  onAction: productProvider.hasActiveFilters
+                      ? productProvider.resetFilters
+                      : null,
+                ),
+              )
             else
               SliverPadding(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
