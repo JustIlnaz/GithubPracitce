@@ -23,6 +23,7 @@ class ProductProvider with ChangeNotifier {
   double? _minPrice;
   double? _maxPrice;
   ProductSortOption _sortOption = ProductSortOption.defaultOrder;
+  bool _hasLoadedProducts = false;
   int _latestProductsRequestId = 0;
   int _latestCategoriesRequestId = 0;
 
@@ -80,25 +81,34 @@ class ProductProvider with ChangeNotifier {
         _minPrice != minPrice ||
         _maxPrice != maxPrice ||
         _sortOption != sortOption;
-    if (!didChange && _error == null && _products.isNotEmpty) return true;
+    if (!didChange &&
+        (_isLoading || (_error == null && _hasLoadedProducts))) {
+      return true;
+    }
 
     _selectedCategoryId = categoryId;
     _minPrice = minPrice;
     _maxPrice = maxPrice;
     _sortOption = sortOption;
     await _loadProducts();
-    return _error == null;
+    return true;
   }
 
   Future<void> selectCategory(String? categoryId) async {
-    if (_selectedCategoryId == categoryId && _error == null) return;
+    if (_selectedCategoryId == categoryId &&
+        (_isLoading || (_error == null && _hasLoadedProducts))) {
+      return;
+    }
     _selectedCategoryId = categoryId;
     await _loadProducts();
   }
 
   Future<void> updateSearch(String query) async {
     final normalizedQuery = query.trim();
-    if (_searchQuery == normalizedQuery && _error == null) return;
+    if (_searchQuery == normalizedQuery &&
+        (_isLoading || (_error == null && _hasLoadedProducts))) {
+      return;
+    }
     _searchQuery = normalizedQuery;
     await _loadProducts();
   }
@@ -110,12 +120,16 @@ class ProductProvider with ChangeNotifier {
     _maxPrice = null;
     _sortOption = ProductSortOption.defaultOrder;
     if (!keepSearch) _searchQuery = '';
-    if (didChange || _error != null || _products.isEmpty) {
+    if (didChange || (_error != null && !_isLoading) || !_hasLoadedProducts) {
       await _loadProducts();
     }
   }
 
   String? validatePriceRange(double? minPrice, double? maxPrice) {
+    if ((minPrice != null && !minPrice.isFinite) ||
+        (maxPrice != null && !maxPrice.isFinite)) {
+      return 'Введите корректную цену';
+    }
     if ((minPrice != null && minPrice < 0) ||
         (maxPrice != null && maxPrice < 0)) {
       return 'Цена не может быть отрицательной';
@@ -144,8 +158,10 @@ class ProductProvider with ChangeNotifier {
       );
       if (requestId != _latestProductsRequestId) return;
       _products = products;
+      _hasLoadedProducts = true;
     } catch (e) {
       if (requestId != _latestProductsRequestId) return;
+      _hasLoadedProducts = false;
       _error = ErrorHandler.getFriendlyErrorMessage(e);
     } finally {
       if (requestId == _latestProductsRequestId) {

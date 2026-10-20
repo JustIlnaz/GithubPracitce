@@ -4,6 +4,27 @@ class Category {
   final String? iconName;
   final int sortOrder;
 
+  String get displayName {
+    switch (name.toLowerCase()) {
+      case 'all':
+        return 'Все';
+      case 'food':
+        return 'Корма';
+      case 'toys':
+        return 'Игрушки';
+      case 'healthcare':
+        return 'Здоровье';
+      case 'accessories':
+        return 'Аксессуары';
+      case 'grooming':
+        return 'Груминг';
+      case 'clothing':
+        return 'Одежда';
+      default:
+        return name;
+    }
+  }
+
   Category({
     required this.id,
     required this.name,
