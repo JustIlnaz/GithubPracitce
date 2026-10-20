@@ -5,6 +5,7 @@ import 'package:pawora/main.dart';
 void main() {
   testWidgets('App smoke test', (WidgetTester tester) async {
     await tester.pumpWidget(const PaworaApp());
+    await tester.pump(const Duration(seconds: 2));
     expect(find.byType(MaterialApp), findsOneWidget);
   });
 }
