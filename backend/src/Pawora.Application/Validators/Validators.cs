@@ -59,6 +59,37 @@ public class CreateProductDtoValidator : AbstractValidator<CreateProductDto>
     }
 }
 
+public class ProductFilterDtoValidator : AbstractValidator<ProductFilterDto>
+{
+    public ProductFilterDtoValidator()
+    {
+        RuleFor(x => x.MinPrice)
+            .GreaterThanOrEqualTo(0)
+            .When(x => x.MinPrice.HasValue)
+            .WithMessage("Минимальная цена не может быть отрицательной.");
+
+        RuleFor(x => x.MaxPrice)
+            .GreaterThanOrEqualTo(0)
+            .When(x => x.MaxPrice.HasValue)
+            .WithMessage("Максимальная цена не может быть отрицательной.");
+
+        RuleFor(x => x)
+            .Must(x => !x.MinPrice.HasValue || !x.MaxPrice.HasValue || x.MinPrice <= x.MaxPrice)
+            .WithMessage("Минимальная цена не может быть больше максимальной.");
+
+        RuleFor(x => x.Skip)
+            .GreaterThanOrEqualTo(0);
+
+        RuleFor(x => x.Take)
+            .InclusiveBetween(1, 100);
+
+        RuleFor(x => x.SortBy)
+            .Must(sortBy => string.IsNullOrWhiteSpace(sortBy) ||
+                ProductSortOptions.All.Contains(sortBy, StringComparer.OrdinalIgnoreCase))
+            .WithMessage("Неизвестный режим сортировки товаров.");
+    }
+}
+
 public class CreateOrderDtoValidator : AbstractValidator<CreateOrderDto>
 {
     public CreateOrderDtoValidator()

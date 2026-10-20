@@ -34,9 +34,25 @@ public class ProductFilterDto
     public string? Search { get; set; }
     public Guid? CategoryId { get; set; }
     public Guid? ShopId { get; set; }
+    public decimal? MinPrice { get; set; }
+    public decimal? MaxPrice { get; set; }
     public int Skip { get; set; } = 0;
     public int Take { get; set; } = 20;
     public string? SortBy { get; set; }
+}
+
+public static class ProductSortOptions
+{
+    public const string PriceAscending = "price_asc";
+    public const string PriceDescending = "price_desc";
+    public const string RatingDescending = "rating";
+
+    public static readonly string[] All =
+    [
+        PriceAscending,
+        PriceDescending,
+        RatingDescending
+    ];
 }
 
 public class CategoryDto
