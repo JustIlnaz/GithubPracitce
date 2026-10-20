@@ -3,6 +3,7 @@ enum ProductSortOption {
   priceAscending,
   priceDescending,
   ratingDescending,
+  popularityDescending,
 }
 
 extension ProductSortOptionDetails on ProductSortOption {
@@ -16,6 +17,8 @@ extension ProductSortOptionDetails on ProductSortOption {
         return 'price_desc';
       case ProductSortOption.ratingDescending:
         return 'rating';
+      case ProductSortOption.popularityDescending:
+        return 'popularity';
     }
   }
 
@@ -29,6 +32,8 @@ extension ProductSortOptionDetails on ProductSortOption {
         return 'Сначала дорогие';
       case ProductSortOption.ratingDescending:
         return 'По рейтингу';
+      case ProductSortOption.popularityDescending:
+        return 'По популярности';
     }
   }
 }

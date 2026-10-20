@@ -46,12 +46,14 @@ public static class ProductSortOptions
     public const string PriceAscending = "price_asc";
     public const string PriceDescending = "price_desc";
     public const string RatingDescending = "rating";
+    public const string PopularityDescending = "popularity";
 
     public static readonly string[] All =
     [
         PriceAscending,
         PriceDescending,
-        RatingDescending
+        RatingDescending,
+        PopularityDescending
     ];
 }
 

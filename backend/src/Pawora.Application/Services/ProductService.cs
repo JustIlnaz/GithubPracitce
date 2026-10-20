@@ -5,6 +5,7 @@ using Pawora.Application.DTOs;
 using Pawora.Application.DTOs.Products;
 using Pawora.Application.Interfaces;
 using AutoMapper;
+using Pawora.Core.Enums;
 
 namespace Pawora.Application.Services;
 
@@ -57,6 +58,13 @@ public class ProductService : IProductService
                 .ThenBy(p => p.Id),
             ProductSortOptions.RatingDescending => query
                 .OrderByDescending(p => p.Rating)
+                .ThenByDescending(p => p.CreatedAt)
+                .ThenBy(p => p.Id),
+            ProductSortOptions.PopularityDescending => query
+                .OrderByDescending(p => p.OrderItems
+                    .Where(item => item.Order.Status != OrderStatus.Cancelled)
+                    .Sum(item => (int?)item.Quantity) ?? 0)
+                .ThenByDescending(p => p.Rating)
                 .ThenByDescending(p => p.CreatedAt)
                 .ThenBy(p => p.Id),
             _ => query
